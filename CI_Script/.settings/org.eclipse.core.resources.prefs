@@ -1,0 +1,11 @@
+eclipse.preferences.version=1
+encoding//src/Jenkins/SysUtil.py=utf-8
+encoding//src/Jenkins/deploy.py=utf-8
+encoding//src/Jenkins/package_dependency.py=utf-8
+encoding//src/Jenkins/package_mvn_project.py=utf-8
+encoding//src/test_case/CustomerMgt/MerchantMgt.py=utf-8
+encoding//src/test_case/CustomerMgt/__init__.py=utf-8
+encoding//src/test_case/SecurityMgt/OperateLog.py=utf-8
+encoding//src/test_case/WebpayCommon/__init__.py=utf-8
+encoding//src/test_case/test.py=utf-8
+encoding/src=UTF-8
