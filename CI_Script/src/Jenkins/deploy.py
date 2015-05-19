@@ -2,7 +2,7 @@
 #author:Dong Jie
 #mail:dongjie789@sina.com
 #!/bin/bash
-import re,os,sys,shutil,time,stat
+import os,sys,shutil,stat
 from Jenkins import SysUtil
 class deploy(object):
     '''
@@ -106,7 +106,7 @@ class deploy(object):
                         print "Copy service from %s to %s."%(src_svc,dst_svc)
                     #self.__restart(self.svc_items[sub_sc],svc_run_items[sub_sc])
                 else:
-                   print "Deploy folder %s not exist!"%svc_deploy_folder
+                    print "Deploy folder %s not exist!"%svc_deploy_folder
             else:                        
                 print "No file under %s"%source_sub_folder
         else:
@@ -154,20 +154,20 @@ class deploy(object):
 
     def __cls_oldver(self,path):
         files = os.listdir(path)
-        for file in files:
-            if "-SNAPSHOT.jar".lower() in file.lower():
-                os.remove(os.path.join(path,file))
+        for f in files:
+            if "-SNAPSHOT.jar".lower() in f.lower():
+                os.remove(os.path.join(path,f))
 
     def __restart(self,sub_item,run_folder):
         print "Restart %s, and the command folder is %s"%(sub_item,run_folder)
-        process_number=os.popen("ps -ef|grep " + sub_sc + "/|grep -v grep|awk '{print $2}'").read()
+        process_number=os.popen("ps -ef|grep " + sub_item + "/|grep -v grep|awk '{print $2}'").read()
         process_number.strip()
         print process_number
         if process_number.isalnum():
-            print "Kill the process %s of %s"%(process_number,sub_sc)
+            print "Kill the process %s of %s"%(process_number,sub_item)
             os.popen("kill -9 "+ process_number)
         else:
-            print "No process for %s"%sub_sc
+            print "No process for %s"%sub_item
         restart_command = run_folder + "start.sh"
         os.chmod(restart_command,stat.S_IRWXU+stat.S_IRWXG+stat.S_IRWXO)
         os.popen("sh " + restart_command) 
@@ -197,7 +197,7 @@ def deploy_test():
     d.start_deploy()
 
 def deploy_run():
-    dep = deploy(r"/root/Webpay-package-files/0.3.4/2015-01-09_18-10-00",'all')
-    
+    d = deploy(r"/root/Webpay-package-files/0.3.4/2015-01-09_18-10-00",'all')
+    d.start_deploy()
 if __name__ == "__main__":
     deploy_test()
