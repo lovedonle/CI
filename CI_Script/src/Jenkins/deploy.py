@@ -25,9 +25,11 @@ class deploy(object):
         '''
         self.source_folder = source_folder
         self.deploy_scope = deploy_scope
-        self.backup = source_folder+os.sep+'backup'
+        self.force_backup = False
+        self.backup = os.path.join(source_folder,'backup')
         SysUtil.createfolder(self.source_folder,'backup')        
         self.web_items = {"boss":"payment-boss-web","merchant":"payment-merchant-web","pre":"payment-pre-interface"}
+        self.web_item_dst_name = 'ROOT.war'
         self.svc_items = {"ac":"payment-ac","account":"payment-account","ams":"payment-ams",
                     "channel":"payment-channel","cm":"payment-cm","cms":"payment-cms",
                     "fastdfs":"payment-fastdfs","mas":"payment-mas","pe":"payment-pe",
@@ -40,8 +42,9 @@ class deploy(object):
         define the head and tail name of the deploy path and run path.
         generate deploy and run directory of web and service
         '''
-        web_deploy = {"head":"/data/run/","tail":""}
-        svc_deploy = {"head":"/data/program/payment/","tail":"/deploy"}
+        web_deploy = {"head":"/data/run/app/","tail":""}
+#        svc_deploy = {"head":"/data/program/payment/","tail":"/deploy"}
+        svc_deploy = {"head":"F:\\test\\deploy\\","tail":"/deploy"}
         web_run = {"head":"/data/program/tomcat/","tail":"/node/bin"}
         svc_run = {"head":"/data/program/payment/","tail":"/bin"}
         self.source_items = dict()
@@ -51,13 +54,13 @@ class deploy(object):
         self.web_run_items=dict()
         self.svc_run_items=dict()
         for key in self.web_items.keys():
-            self.source_items[key]=self.source_folder+os.sep+self.web_items[key]
-            self.backup_items[key]=self.source_folder+os.sep+"backup"+os.sep+self.web_items[key]
+            self.source_items[key]=os.path.join(self.source_folder,self.web_items[key])
+            self.backup_items[key]=os.path.join(self.backup,self.web_items[key])
             self.web_deploy_items[key]=web_deploy['head']+self.web_items[key]+web_deploy['tail']
             self.web_run_items[key]=web_run['head']+self.web_items[key]+web_run['tail']
         for key in self.svc_items.keys():
-            self.source_items[key]=self.source_folder+os.sep+self.svc_items[key]
-            self.backup_items[key]=self.source_folder+os.sep+"backup"+os.sep+self.svc_items[key]     
+            self.source_items[key]=os.path.join(self.source_folder,self.svc_items[key])
+            self.backup_items[key]=os.path.join(self.backup,self.svc_items[key]) 
             self.svc_deploy_items[key]=svc_deploy['head']+self.svc_items[key]+svc_deploy['tail']
             self.svc_run_items[key]=svc_run['head']+self.svc_items[key]+svc_run['tail']
         print self.source_items
@@ -66,86 +69,97 @@ class deploy(object):
         print self.svc_deploy_items
         print self.web_run_items
         print self.svc_run_items
-        
-    def deploy_specified(self,sub_sc):
-        #Service
-        #todo  del and copy every jar file，根据源目录，来处理目标部署目录，目标部署目录不存在报错
-        if sub_sc in self.svc_items.keys():
-            svc_deploy_folder = self.svc_deploy_items[sub_sc]
-            print "Target deploy folder is %s"%svc_deploy_folder
-            svc_run_folder = self.svc_run_items[sub_sc]
-            print "Target cmd folder is %s"%svc_run_folder
-            source_sub_folder = self.source_items[sub_sc]
-            backup_sub_folder = self.backup_items[sub_sc]
-            if os.path.exists(source_sub_folder):
-                source_file = os.listdir(source_sub_folder)
-                if len(source_file) == 0:
-                    print "No service file under %s"%source_sub_folder
+    
+
+    def __deploy_svc(self,sub_sc):
+        '''deploy service'''
+        source_sub_folder = self.source_items[sub_sc]
+        backup_sub_folder = self.backup_items[sub_sc]
+        svc_deploy_folder = self.svc_deploy_items[sub_sc]
+        print "Target deploy folder is %s"%svc_deploy_folder
+        if os.path.exists(source_sub_folder):
+            source_files = os.listdir(source_sub_folder)
+            if len(source_files) != 0:
                 if (os.path.exists(svc_deploy_folder)):
-                    '''bckup action will remove the folder'''
+                    print '''Start backup action'''
                     #time_prefix = time.strftime('%Y-%m-%d_%H-%M-%S')
                     if not os.path.exists(backup_sub_folder):
-                        print "The backup folder not exists, copy the files in target folder to backup folder..."
-                        shutil.move(svc_deploy_folder, backup_sub_folder)
+                        shutil.copytree(svc_deploy_folder, backup_sub_folder)
+                        print "Copy %s to %s"%(svc_deploy_folder,backup_sub_folder)
                     else:
-                        print "File already exist, no need to move again, but only clean the target folder"
-                        shutil.rmtree(svc_deploy_folder)
-                    '''Copy jar folder to target path'''
-                    shutil.copytree(source_sub_folder,svc_deploy_folder)
-                    endprocess(sub_sc)
-                    restart_command = svc_run_folder + "restart.sh"
-                    os.chmod(restart_command,stat.S_IRWXU+stat.S_IRWXG+stat.S_IRWXO)
-                    os.popen("sh " + restart_command)
-                else:
-                    "Deploy folder %s not exist!"%svc_deploy_folder
-            else:
-                print "The source folder: %s not exist!"%source_sub_folder    
-        #Web application
-        #todo,根据源目录，来处理目标部署目录，目标部署目录不存在报错
-        elif sub_sc in self.web_items.keys():
-            web_deploy_folder = self.web_deploy_items[sub_sc]
-            print "Target deploy folder is %s"%web_deploy_folder
-            web_run_folder = self.web_run_items[sub_sc]
-            print "Target cmd folder is %s"%web_run_folder
-            source_sub_folder = self.source_items[sub_sc]
-            backup_sub_folder = self.backup_items[sub_sc]
-            if os.path.exists(source_sub_folder):
-                source_file = os.listdir(source_sub_folder)
-                if len(source_file) != 1:
-                    print "No web file or more than one file under %s"%source_sub_folder
-                else:
-                    temp = source_file.split('.war')[0]
-                    if (os.path.exists(web_deploy_folder)):
-                        '''backup action will remove the folder'''
-                        shutil.rmtree(web_deploy_folder + temp)
-                        if not os.path.exists(backup_sub_folder):
-                            print "The backup folder not exists, copy the files in target folder to backup folder..."
-                            shutil.move(web_deploy_folder+os.sep+source_file,backup_sub_folder)
+                        if not self.force_backup:
+                            print '''Backup files already exist, cannot backup again, if you want backup mandatory,
+                            please set the flag: "force_backup" to 'True', but only clean the target folder'''
                         else:
-                            print "File already exist, no need to move again, only clean the target folder"
-                            shutil.rmtree(web_deploy_folder+os.sep+source_file)
-                        '''Copy war file to target path'''
-                        shutil.copy(source_sub_folder + os.sep + source_file,web_deploy_folder)
-                        endprocess(sub_sc)
-                        restart_command = web_run_folder + "startup.sh"
-                        os.chmod(restart_command,stat.S_IRWXU+stat.S_IRWXG+stat.S_IRWXO)
-                        os.popen("sh " + restart_command)
+                            shutil.rmtree(backup_sub_folder)
+                            shutil.copytree(svc_deploy_folder, backup_sub_folder)
+                            print "Clean the backup sub folder mandatory and copy %s to %s"%(svc_deploy_folder,backup_sub_folder)
+                    self.__cls_oldver(svc_deploy_folder)
+                    print "Remove old jar files name with -SNAPSHOT.jar"
+                    for each_svc in source_files: 
+                        '''Copy each jar file to target path'''
+                        src_svc = os.path.join(source_sub_folder,each_svc)
+                        dst_svc = os.path.join(svc_deploy_folder,each_svc)
+                        if os.path.exists(dst_svc):
+                            os.remove(dst_svc)
+                        shutil.copy(src_svc,dst_svc)
+                        print "Copy service from %s to %s."%(src_svc,dst_svc)
+                    #self.__restart(self.svc_items[sub_sc],svc_run_items[sub_sc])
+                else:
+                   print "Deploy folder %s not exist!"%svc_deploy_folder
+            else:                        
+                print "No file under %s"%source_sub_folder
+        else:
+            print "The source folder: %s not exist!"%source_sub_folder   
+            
+    def __deploy_web(self,sub_sc):
+        '''deploy web application'''
+        source_sub_folder = self.source_items[sub_sc]
+        backup_sub_folder = self.backup_items[sub_sc] 
+        web_deploy_folder = self.web_deploy_items[sub_sc]
+        print "Target deploy folder is %s"%web_deploy_folder
+        if os.path.exists(source_sub_folder):
+            source_file = os.listdir(source_sub_folder)
+            if len(source_file) != 1:
+                if (os.path.exists(web_deploy_folder)):
+                    print '''Start backup action'''
+                    shutil.rmtree(os.path.join(web_deploy_folder,self.web_item_dst_name.split('.war')[0]))
+                    print '''remove the ROOT folder'''
+                    if not os.path.exists(backup_sub_folder):
+                        shutil.copytree(web_deploy_folder,backup_sub_folder)
+                        print "Copy %s to %s"%(web_deploy_folder,backup_sub_folder)
                     else:
-                        "Deploy folder %s not exist!"%web_deploy_folder
-    
+                        if not self.force_backup:
+                            print '''Backup files already exist, cannot backup again, 
+                            if you want backup mandatory, please set the flag: "force_backup" to 'True', but only clean the target folder'''
+                        else:
+                            shutil.rmtree(backup_sub_folder)
+                            shutil.copytree(web_deploy_folder, backup_sub_folder)
+                            print "Clean the backup sub folder mandatory and copy %s to %s"%(web_deploy_folder,backup_sub_folder)                        
+                    print "Copy war file to target path and rename to 'ROOT.war'"
+                    for each_web in source_file:
+                        src_web = os.path.join(source_sub_folder,each_web)
+                        dst_web = os.path.join(web_deploy_folder,os.path.join(web_deploy_folder,self.web_item_dst_name))
+                        if os.path.exists(dst_web):
+                            os.remove(dst_web)
+                        shutil.copy(src_web,dst_web)
+                        print "Copy web package from %s to %s."%(src_web,dst_web)
+                    #self.__restart(self.web_items[sub_sc],self.web_run_items[sub_sc])
+                else:
+                    "Deploy folder %s not exist!"%web_deploy_folder    
             else:
-                print "The source folder: %s not exist!"%source_sub_folder
+                print "No web file or more than one file under %s"%source_sub_folder
         else:
-            print "There's no such service or web application: %s"%sub_sc
+            print "The source folder: %s not exist!"%source_sub_folder
 
-    def endprocess(self,sub_sc):
-        if sub_sc in self.svc_items.keys():
-            sub_sc = self.svc_items[sub_sc]
-        elif sub_sc in self.web_items.keys():
-            sub_sc = self.web_items[sub_sc]
-        else:
-            print "Please check whether the %s exist..."%sub_sc
-        print sub_sc
+    def __cls_oldver(self,path):
+        files = os.listdir(path)
+        for file in files:
+            if "-SNAPSHOT.jar".lower() in file.lower():
+                os.remove(os.path.join(path,file))
+
+    def __restart(self,sub_item,run_folder):
+        print "Restart %s, and the command folder is %s"%(sub_item,run_folder)
         process_number=os.popen("ps -ef|grep " + sub_sc + "/|grep -v grep|awk '{print $2}'").read()
         process_number.strip()
         print process_number
@@ -154,21 +168,36 @@ class deploy(object):
             os.popen("kill -9 "+ process_number)
         else:
             print "No process for %s"%sub_sc
-                
+        restart_command = run_folder + "start.sh"
+        os.chmod(restart_command,stat.S_IRWXU+stat.S_IRWXG+stat.S_IRWXO)
+        os.popen("sh " + restart_command) 
+        
+    def start_deploy(self):
+        sc = self.deploy_scope
+        if sc == 'all':
+            pass
+        else:
+            if sc in self.svc_items.keys():
+                self.__deploy_svc(sc)
+            elif sc in self.web_items.keys():
+                self.__deploy_web(sc)
+            else:
+                print "There's no such service or web application: %s"%sc
+                sys.exit(1)
+                                       
     def recover(self):
         pass
     
-    def restart(self):
+    def check_status(self):
         pass
     
-    def check(self):
-        pass
-    
-def run():
-    pass
+def deploy_test():
+    '''传入带有版本号的路径，以及需要部署的service或是web工程，或是需要全部则 all'''
+    d = deploy(r"F:\test\source\0.4.1",'ac')
+    d.start_deploy()
 
-def test_run():
-    dep = deploy(r"C:\log",'all')
-    #dep = deploy(r"/root/Webpay-package-files/0.3.4/2015-01-09_18-10-00",'all')
+def deploy_run():
+    dep = deploy(r"/root/Webpay-package-files/0.3.4/2015-01-09_18-10-00",'all')
+    
 if __name__ == "__main__":
-    test_run()
+    deploy_test()
