@@ -12,9 +12,11 @@ class deploy(object):
     {
     #备份所有即将被覆盖的文件，备份在指定目录下，并以job传入的时间戳为文件夹名称的一部分；
     #当新部署的包不能正常工作时可以再替换回来；
-    #替换文件为新文件；
+    #替换文件为新文件；done
+    #检查配置文件
+    #修改db配置文件，和dubbo配置文件，已有的服务可以忽略，新的服务需要修改这两项；web工程需要先启动，然后修改，最后重启【也可以考虑在打包时修改配置文件】
+    #
     #重启：根据所部署的模块名字，ps -ef|grep 模块名 得到进程号，使用kill -9关闭其进程，然后重启；
-    #修改配置,war工程在重启后-->修改配置-->重启，服务直接修改配置后再重启；
     }
     #检查所有服务、web工程、以及其他必须的监控服务都正常启动，dubbo monitor，zookeper，等等
     #如果不是都启动则重启动，再次检测，仍未启动则报错
@@ -47,22 +49,28 @@ class deploy(object):
         svc_deploy = {"head":"F:\\test\\deploy\\","tail":"/deploy"}
         web_run = {"head":"/data/program/tomcat/","tail":"/node/bin"}
         svc_run = {"head":"/data/program/payment/","tail":"/bin"}
+        web_cfg = {"head":"/data/program/tomcat/","tail":"/node/conf"}
+        svc_cfg = {"head":"/data/program/payment/","tail":"/conf"}
         self.source_items = dict()
         self.backup_items = dict()
         self.web_deploy_items=dict()
         self.svc_deploy_items=dict()
         self.web_run_items=dict()
         self.svc_run_items=dict()
+        self.web_cfg_items=dict()
+        self.svc_cfg_items=dict()
         for key in self.web_items.keys():
             self.source_items[key]=os.path.join(self.source_folder,self.web_items[key])
             self.backup_items[key]=os.path.join(self.backup,self.web_items[key])
             self.web_deploy_items[key]=web_deploy['head']+self.web_items[key]+web_deploy['tail']
             self.web_run_items[key]=web_run['head']+self.web_items[key]+web_run['tail']
+            self.web_cfg_items[key]=web_cfg['head']+self.web_items[key]+web_cfg['tail']
         for key in self.svc_items.keys():
             self.source_items[key]=os.path.join(self.source_folder,self.svc_items[key])
             self.backup_items[key]=os.path.join(self.backup,self.svc_items[key]) 
             self.svc_deploy_items[key]=svc_deploy['head']+self.svc_items[key]+svc_deploy['tail']
             self.svc_run_items[key]=svc_run['head']+self.svc_items[key]+svc_run['tail']
+            self.svc_cfg_items[key]=svc_cfg['head']+self.svc_items[key]+svc_cfg['tail']
         print self.source_items
         print self.backup_items
         print self.web_deploy_items
@@ -70,7 +78,6 @@ class deploy(object):
         print self.web_run_items
         print self.svc_run_items
     
-
     def __deploy_svc(self,sub_sc):
         '''deploy service'''
         source_sub_folder = self.source_items[sub_sc]
@@ -157,7 +164,9 @@ class deploy(object):
         for f in files:
             if "-SNAPSHOT.jar".lower() in f.lower():
                 os.remove(os.path.join(path,f))
-
+    def __checkcfg(self):
+        '''check dbs configuration and dubbo configuration'''
+        pass
     def __restart(self,sub_item,run_folder):
         print "Restart %s, and the command folder is %s"%(sub_item,run_folder)
         process_number=os.popen("ps -ef|grep " + sub_item + "/|grep -v grep|awk '{print $2}'").read()

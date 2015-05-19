@@ -21,7 +21,7 @@ def getostype():
         print "Cannot get OS type."
     
 def createfolder(path,folder):
-    '''consider user os.makedirs() to refactory'''
+    '''TODO: consider user os.makedirs() to refactory'''
     os_type = getostype()
     os_types = enum(Windows = "windows",Linux = "linux", Mac = "mac")
     if not os.path.exists(path):
