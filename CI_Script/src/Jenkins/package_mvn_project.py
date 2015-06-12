@@ -388,7 +388,8 @@ class package_mvn_project(object):
                 if len(dependencies[key]) == 0:
                     self._change_dir(key)
                     print "Current folder: %s, start package %s"%(os.path.abspath("."),key)
-                    p = subprocess.Popen([maven_home,"clean","install","dependency:copy-dependencies","-DoutputDirectory=target/"],stdout=subprocess.PIPE)
+                    p = subprocess.Popen([maven_home,"clean","install"],stdout=subprocess.PIPE)
+#                    p = subprocess.Popen([maven_home,"clean","install","dependency:copy-dependencies","-DoutputDirectory=target/"],stdout=subprocess.PIPE)
                     self._pollprocess(key,p)               
                 if len(dependencies[key]) >= 1:
                     depend_values = dependencies[key]
@@ -464,8 +465,9 @@ class package_mvn_project(object):
         else:
             package_status[key] = "unpackaged"
             print "%s log is too less, package status is not sure..."%key
-        log = open("package.log","w")
+        log = open(self.maven_project+os.sep+"package.log","a")
         try:
+            log.write("========== %s package log start==========")
             log.write(all_stdout)
         finally:
             log.close()
@@ -525,5 +527,5 @@ def package_run():
             sys.exit(1)
 
 if __name__ == "__main__": 
-    package_test(r"E:\webpay_workspace_test","0.4.1-SNAPSHOT",'all',r"dict.txt",False,True)
-    #package_run()
+    #package_test(r"E:\webpay_workspace_test","0.4.1-SNAPSHOT",'all',r"dict.txt",False,True)
+    package_run()

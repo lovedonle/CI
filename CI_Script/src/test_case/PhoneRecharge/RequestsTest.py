@@ -222,8 +222,8 @@ class RequestsTest(object):
 
 if __name__=="__main__":   
     rt=RequestsTest()
-    #rt.phoneRecharge(merchantcode="1000000431",phone="15928140495",amount=50000l)
-    #rt.phoneQuery()
-    rt.payment_Chukuan()
+    rt.phoneRecharge(merchantcode="1000000431",phone="13008127082",amount=3000l)
+    rt.phoneQuery()
+    #rt.payment_Chukuan()
         
         

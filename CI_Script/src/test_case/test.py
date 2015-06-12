@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 #import re
 #
+a = u"你       好！"
+b=a.replace(" ",'')
+print b
+
+
 #file_hand = open(r"C:\text.txt")
 #content = file_hand.read()
 #file_hand.close()
@@ -26,10 +31,10 @@
 # print Numbers.__bases__ 
 # print Numbers.__dict__ 
 
-def A(a):
-    print a
-    
-A([1,2,3])
+#def A(a):
+#    print a
+#    
+#A([1,2,3])
 #if m is not None:
 #    print m.group()
 #import os
