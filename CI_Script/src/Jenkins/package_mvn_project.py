@@ -57,18 +57,18 @@ class package_mvn_project(object):
         maven_project = self.maven_project
         sub_maven_project = []        
         for root, dirs, files in os.walk(maven_project):
-            print "==========Start to remove obsolete folder=========="
+            print "==========Start to ignore obsolete folder=========="
             for obsolete in self.obsolete_project:
                 if obsolete in dirs:
                     dirs.remove(obsolete)
-                    print "There's no need to build %s, remove it."%obsolete
+                    print "There's no need to build %s, ignore it."%obsolete
             sub_maven_project = dirs[:]
-            print "==========Start to check the pom file and remove the illegal folder=========="
+            print "==========Start to check the pom file and ignore the illegal folder=========="
             for sub_dir in dirs:
                 for level_1_root, level_1_dirs, level_1_files in os.walk(maven_project+os.sep+sub_dir):
                     if len(level_1_files) == 0:
                         sub_maven_project.remove(sub_dir)
-                        print "There's no file under %s, remove it."%sub_dir
+                        print "There's no file under %s, ignore it."%sub_dir
                     else:
                         #if contains pom.xml, then check its version
                         for level_1_element in level_1_files:
@@ -467,7 +467,7 @@ class package_mvn_project(object):
             print "%s log is too less, package status is not sure..."%key
         log = open(self.maven_project+os.sep+"package.log","a")
         try:
-            log.write("========== %s package log start==========")
+            log.write("==========" + key + " package log start==========/n")
             log.write(all_stdout)
         finally:
             log.close()
