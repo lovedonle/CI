@@ -2,7 +2,7 @@
 #author:Dong Jie
 #mail:dongjie789@sina.com
 #!/bin/bash
-import re,os,platform
+import re,os,platform,shutil
 __all__ = ["enum","getostype"]
 
 def enum(**enums):
@@ -49,3 +49,23 @@ def createfolder(path,folder):
                 print "folder path format is not correct:%s on %s system."%(folder_path,os_type)
         elif os_type == os_types.Mac:
             print 'create folder for mac system is TBD.'
+def copyfolder(src,dst):
+    '''
+    copy all files from src folder to dst folder, 
+    if dst folder doesn't exist, create dst,
+    if dst folder exists, then will delete the old file under dst and copy new file from src to it.
+    '''
+    if os.path.exists(src):
+        if not os.path.exists(dst)
+            shutil.copytree(src, dst)
+            print "Copying from %s to %s done."%(src,dst)
+        for file in os.listdir(src):
+            src_file = os.path.join(src,file)
+            if os.path.isfile(src_file)#src is file
+                shutil.copy(src_file, dst)
+            if os.path.isdir(src_file)#src is folder
+                copyfolder(src_file,os.path.join(dst,file))            
+    else:
+        print "src folder %s doesn't exists"%src
+        
+    

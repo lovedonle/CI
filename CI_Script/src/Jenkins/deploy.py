@@ -96,7 +96,7 @@ class deploy(object):
                     else:
                         if not self.force_backup:
                             print '''Backup files already exist, cannot backup again, if you want backup mandatory,
-                            please set the flag: "force_backup" to 'True', but only clean the target folder'''
+                            please set the flag: "force_backup" to 'True', here only clean the target folder'''
                         else:
                             shutil.rmtree(backup_sub_folder)
                             shutil.copytree(svc_deploy_folder, backup_sub_folder)
@@ -121,6 +121,7 @@ class deploy(object):
             
     def __deploy_web(self,sub_sc):
         '''deploy web application'''
+        '''todo: delete the catch folder, such as:/data/program/tomcat/payment-boss-web/node/work/Catalina/localhost'''
         source_sub_folder = self.source_items[sub_sc]
         backup_sub_folder = self.backup_items[sub_sc] 
         web_deploy_folder = self.web_deploy_items[sub_sc]
@@ -138,7 +139,7 @@ class deploy(object):
                     else:
                         if not self.force_backup:
                             print '''Backup files already exist, cannot backup again, 
-                            if you want backup mandatory, please set the flag: "force_backup" to 'True', but only clean the target folder'''
+                            if you want backup mandatory, please set the flag: "force_backup" to 'True', here only clean the target folder'''
                         else:
                             shutil.rmtree(backup_sub_folder)
                             shutil.copytree(web_deploy_folder, backup_sub_folder)
