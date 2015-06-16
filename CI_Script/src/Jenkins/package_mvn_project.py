@@ -388,8 +388,8 @@ class package_mvn_project(object):
                 if len(dependencies[key]) == 0:
                     self._change_dir(key)
                     print "Current folder: %s, start package %s"%(os.path.abspath("."),key)
-                    p = subprocess.Popen([maven_home,"clean","install"],stdout=subprocess.PIPE)
-#                    p = subprocess.Popen([maven_home,"clean","install","dependency:copy-dependencies","-DoutputDirectory=target/"],stdout=subprocess.PIPE)
+#                    p = subprocess.Popen([maven_home,"clean","install"],stdout=subprocess.PIPE)
+                    p = subprocess.Popen([maven_home,"clean","install","dependency:copy-dependencies","-DoutputDirectory=target/"],stdout=subprocess.PIPE)
                     self._pollprocess(key,p)               
                 if len(dependencies[key]) >= 1:
                     depend_values = dependencies[key]
@@ -490,7 +490,7 @@ def package_test(maven_project,target_version,package_scope,dict_file,read_dict,
 
 def package_run():
     err_msg ="""Format of arguments are not right, please check.
-        usage:package.py project_folder project_version scope=package_scope 
+        usage:package_mvn_project project_folder project_version scope=package_scope 
         dict_file=dict_file output_and_analyse_dependency ignore_check_dependency_log
         example:
             package all projects:

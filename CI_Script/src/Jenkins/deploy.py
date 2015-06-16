@@ -3,6 +3,9 @@
 #mail:dongjie789@sina.com
 #!/bin/bash
 import os,sys,shutil,stat
+curPath = os.path.abspath(os.path.dirname(__file__))
+rootPath = os.path.split(curPath)[0]
+sys.path.append(rootPath)
 from Jenkins import SysUtil
 class deploy(object):
     '''
@@ -45,8 +48,8 @@ class deploy(object):
         generate deploy and run directory of web and service
         '''
         web_deploy = {"head":"/data/run/app/","tail":""}
-#        svc_deploy = {"head":"/data/program/payment/","tail":"/deploy"}
-        svc_deploy = {"head":"F:\\test\\deploy\\","tail":"/deploy"}
+        svc_deploy = {"head":"/data/program/payment/","tail":"/deploy"}
+#        svc_deploy = {"head":"F:\\test\\deploy\\","tail":"/deploy"}
         web_run = {"head":"/data/program/tomcat/","tail":"/node/bin"}
         svc_run = {"head":"/data/program/payment/","tail":"/bin"}
         web_cfg = {"head":"/data/program/tomcat/","tail":"/node/conf"}
@@ -95,8 +98,7 @@ class deploy(object):
                         print "Copy %s to %s"%(svc_deploy_folder,backup_sub_folder)
                     else:
                         if not self.force_backup:
-                            print '''Backup files already exist, cannot backup again, if you want backup mandatory,
-                            please set the flag: "force_backup" to 'True', here only clean the target folder'''
+                            print '''Backup files already exist, cannot backup again, if you want backup mandatory, please set the flag: "force_backup" to 'True', here only clean the target folder'''
                         else:
                             shutil.rmtree(backup_sub_folder)
                             shutil.copytree(svc_deploy_folder, backup_sub_folder)
@@ -111,7 +113,7 @@ class deploy(object):
                             os.remove(dst_svc)
                         shutil.copy(src_svc,dst_svc)
                         print "Copy service from %s to %s."%(src_svc,dst_svc)
-                    #self.__restart(self.svc_items[sub_sc],svc_run_items[sub_sc])
+                    self.__restart(self.svc_items[sub_sc],self.svc_run_items[sub_sc])
                 else:
                     print "Deploy folder %s not exist!"%svc_deploy_folder
             else:                        
@@ -138,8 +140,7 @@ class deploy(object):
                         print "Copy %s to %s"%(web_deploy_folder,backup_sub_folder)
                     else:
                         if not self.force_backup:
-                            print '''Backup files already exist, cannot backup again, 
-                            if you want backup mandatory, please set the flag: "force_backup" to 'True', here only clean the target folder'''
+                            print '''Backup files already exist, cannot backup again, if you want backup mandatory, please set the flag: "force_backup" to 'True', here only clean the target folder'''
                         else:
                             shutil.rmtree(backup_sub_folder)
                             shutil.copytree(web_deploy_folder, backup_sub_folder)
@@ -152,7 +153,9 @@ class deploy(object):
                             os.remove(dst_web)
                         shutil.copy(src_web,dst_web)
                         print "Copy web package from %s to %s."%(src_web,dst_web)
-                    #self.__restart(self.web_items[sub_sc],self.web_run_items[sub_sc])
+                    shutil.rmtree(self.web_run_items[key].split(os.sep)[-1]+r"work/Catalina/localhost")
+                    print "Remove the cache file under run folder: node/work/Catalina/localhost"
+                    self.__restart(self.web_items[sub_sc],self.web_run_items[sub_sc])
                 else:
                     "Deploy folder %s not exist!"%web_deploy_folder    
             else:
@@ -178,7 +181,7 @@ class deploy(object):
             os.popen("kill -9 "+ process_number)
         else:
             print "No process for %s"%sub_item
-        restart_command = run_folder + "start.sh"
+        restart_command = run_folder + "/start.sh"
         os.chmod(restart_command,stat.S_IRWXU+stat.S_IRWXG+stat.S_IRWXO)
         os.popen("sh " + restart_command) 
         
@@ -207,7 +210,19 @@ def deploy_test():
     d.start_deploy()
 
 def deploy_run():
-    d = deploy(r"/root/Webpay-package-files/0.3.4/2015-01-09_18-10-00",'all')
-    d.start_deploy()
+    errmsg = """Format of arguments are not right, please check.
+        usage:deploy.py source_folder,deploy_scope 
+        example:
+            package all projects:
+                package.py '/root/Trunk' 'all' 
+            package projects of payment-ac:
+                package.py '/root/Trunk' 'payment-ac'"""
+    if len(sys.argv) != 3:
+        print errmsg
+        sys.exit(1)
+    else:
+        d = deploy(sys.argv[1],sys.argv[2])
+        d.start_deploy()
 if __name__ == "__main__":
-    deploy_test()
+#    deploy_test()
+    deploy_run()

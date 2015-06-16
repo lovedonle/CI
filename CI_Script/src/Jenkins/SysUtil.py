@@ -56,14 +56,14 @@ def copyfolder(src,dst):
     if dst folder exists, then will delete the old file under dst and copy new file from src to it.
     '''
     if os.path.exists(src):
-        if not os.path.exists(dst)
+        if not os.path.exists(dst):
             shutil.copytree(src, dst)
             print "Copying from %s to %s done."%(src,dst)
         for file in os.listdir(src):
             src_file = os.path.join(src,file)
-            if os.path.isfile(src_file)#src is file
+            if os.path.isfile(src_file):#src is file
                 shutil.copy(src_file, dst)
-            if os.path.isdir(src_file)#src is folder
+            if os.path.isdir(src_file):#src is folder
                 copyfolder(src_file,os.path.join(dst,file))            
     else:
         print "src folder %s doesn't exists"%src
