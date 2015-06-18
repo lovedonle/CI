@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/python
 import sys,os,shutil,time,stat
 
 #for offical using =========>

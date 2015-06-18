@@ -1,0 +1,6 @@
+Apache Maven 3.2.5 (12a6b3acb947671f09b81f49094c53f426d8cea1; 2014-12-15T01:29:23+08:00)
+Maven home: C:\apache-maven-3.2.5\bin\..
+Java version: 1.6.0_45, vendor: Sun Microsystems Inc.
+Java home: C:\Program Files\Java\jdk1.6.0_45\jre
+Default locale: zh_CN, platform encoding: GBK
+OS name: "windows 7", version: "6.1", arch: "amd64", family: "windows"

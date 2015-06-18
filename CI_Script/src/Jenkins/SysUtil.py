@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #author:Dong Jie
 #mail:dongjie789@sina.com
-#!/bin/bash
+#!/usr/bin/python
 import re,os,platform,shutil
 __all__ = ["enum","getostype"]
 

@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 #author:Dong Jie
 #mail:dongjie789@sina.com
-#!/bin/bash
+#!/usr/bin/python
 import os,sys,re,subprocess,time,platform
+from Jenkins.package_dependency import dependencies
 class package_mvn_project(object):
     '''
     this class is use to analyze maven project, and package them one by one.
     '''
     def __init__(self,maven_project,target_version,scope='all',dict_file=None,
-                 read_dict=False,ignore_failure=False):
+                 read_dict=False,ignore_failure=True):
         '''
         initialize the class parameters:
         maven_project: project folder, like "E:\webpay_workspace_test",
@@ -122,6 +123,17 @@ class package_mvn_project(object):
                 if "pom.xml" in f:
                     print "Now remove the modified pom.xml file %s ..."%str(os.path.join(root,f))
                     os.remove(os.path.join(root,f))
+    
+    def save_dict_file(self):
+        '''
+        Save the dependencies to dict file
+        '''
+        if os.path.exists(self.dict_file):
+            os.remove(self.dict_file)
+        s_dict = open(self.dict_file,'a')
+        for key in self.dependencies.keys():
+            s_dict.write("%s %s\n"%(key,str(self.dependencies[key])))
+        s_dict.close()
 
     def _enum(self,**enums):
         return type('Enum',(),enums)
@@ -455,6 +467,12 @@ class package_mvn_project(object):
                 process.terminate()#for windows,call Windows API TerminateProcess()
                 print "Polling end..."
                 break
+        log = open(self.maven_project+os.sep+"package.log","a")
+        try:
+            log.write("==========" + key + " package log start==========/n")
+            log.write(all_stdout)
+        finally:
+            log.close()
         print "Check package result"
         if "[INFO] BUILD SUCCESS" in all_stdout:
             package_status[key] = "packaged"
@@ -462,15 +480,11 @@ class package_mvn_project(object):
         elif "[INFO] BUILD FAILURE" in all_stdout:
             package_status[key] = "unpackaged"
             print key,package_status[key]
+            sys.exit(1)
         else:
             package_status[key] = "unpackaged"
             print "%s log is too less, package status is not sure..."%key
-        log = open(self.maven_project+os.sep+"package.log","a")
-        try:
-            log.write("==========" + key + " package log start==========/n")
-            log.write(all_stdout)
-        finally:
-            log.close()
+            sys.exit(1)
 
 def package_test(maven_project,target_version,package_scope,dict_file,read_dict,ignore_failure):
     pack_proj = package_mvn_project(maven_project,target_version,scope=package_scope,dict_file=dict_file,
@@ -494,22 +508,39 @@ def package_run():
         dict_file=dict_file output_and_analyse_dependency ignore_check_dependency_log
         example:
             package all projects:
-                package.py '/root/Trunk' '0.4.0-SNAPSHOT' 'all' 
+                package.py '/root/Trunk' '0.4.0-SNAPSHOT' 'all'
             package projects of payment-ac:
                 package.py '/root/Trunk' '0.4.1-SNAPSHOT' 'payment-ac'
             package specified project:
-                package.py 'E:\webpay_workspace_test' '0.4.1-SNAPSHOT' 'payment-ac-api'""" 
-    if len(sys.argv)!=4:
-        print err_msg
-        sys.exit(1)
-    else:
+                package.py 'E:\webpay_workspace_test' '0.4.1-SNAPSHOT' 'payment-ac-api' 
+            when only generating dependencies dict use:
+                package.py '/root/Trunk' '0.4.0-SNAPSHOT'"""
+    if len(sys.argv) == 2:
+        if os.path.isdir(sys.argv[1]) and re.search("\d{1,2}\.\d{1,2}\.\d{1,2}-SNAPSHOT",sys.argv[2],re.IGNORECASE):
+            maven_project = sys.argv[1]
+            target_version = sys.argv[2]
+            dict_file = r"dict.txt"
+            read_dict = False
+            pack_proj = package_mvn_project(maven_project,target_version,dict_file=dict_file,read_dict=read_dict)        
+            pack_proj.pre_mvn_project()
+            if pack_proj.gen_depend_dict():
+                print "Length of dependencies is %s ."%str(len(pack_proj.dependencies))
+                print pack_proj.dependencies
+                pack_proj.save_dict_file()  
+            else:
+                print "Dependencies dictionary generate failed...exit."
+                sys.exit(1) 
+        else:
+            print err_msg
+            sys.exit(1)        
+    elif len(sys.argv) == 4:
         if os.path.isdir(sys.argv[1]) and re.search("\d{1,2}\.\d{1,2}\.\d{1,2}-SNAPSHOT",sys.argv[2],re.IGNORECASE):
             maven_project = sys.argv[1]
             target_version = sys.argv[2]
             package_scope = sys.argv[3] 
             dict_file = r"dict.txt"
-            read_dict = False
-            ignore_failure = True
+            read_dict = True
+            ignore_failure = False
             pack_proj = package_mvn_project(maven_project,target_version,scope=package_scope,dict_file=dict_file,
                                             read_dict=read_dict,ignore_failure=ignore_failure)        
             pack_proj.pre_mvn_project()
@@ -525,7 +556,10 @@ def package_run():
         else:
             print err_msg
             sys.exit(1)
-
+    else:
+        print err_msg
+        sys.exit(1)
+        
 if __name__ == "__main__": 
     #package_test(r"E:\webpay_workspace_test","0.4.1-SNAPSHOT",'all',r"dict.txt",False,True)
     package_run()

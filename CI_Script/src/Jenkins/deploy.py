@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #author:Dong Jie
 #mail:dongjie789@sina.com
-#!/bin/bash
+#!/usr/bin/python
 import os,sys,shutil,stat
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
@@ -173,17 +173,21 @@ class deploy(object):
         pass
     def __restart(self,sub_item,run_folder):
         print "Restart %s, and the command folder is %s"%(sub_item,run_folder)
-        process_number=os.popen("ps -ef|grep " + sub_item + "/|grep -v grep|awk '{print $2}'").read()
-        process_number.strip()
-        print process_number
-        if process_number.isalnum():
-            print "Kill the process %s of %s"%(process_number,sub_item)
-            os.popen("kill -9 "+ process_number)
+        process_id = os.popen("ps -ef|grep " + sub_item + "/|grep -v grep|awk '{print $2}'").read()
+        process_id = process_id.strip(os.linesep)
+        print "%s current process id is %s"%(sub_item,process_id)
+        if process_id is not None:
+            os.popen("kill -9 "+ process_id)
+            print "Kill current process id %s of %s."%(process_id,sub_item)
         else:
-            print "No process for %s"%sub_item
+            print "No process id for %s, start it directly."%sub_item
         restart_command = run_folder + "/start.sh"
+        print "Restart script path is %s"%restart_command
         os.chmod(restart_command,stat.S_IRWXU+stat.S_IRWXG+stat.S_IRWXO)
         os.popen("sh " + restart_command) 
+        new_process_id = os.popen("ps -ef|grep " + sub_item + "/|grep -v grep|awk '{print $2}'").read()
+        new_process_id = new_process_id.strip(os.linesep)
+        print "%s restart process id is %s ."%(sub_item,new_process_id)
         
     def start_deploy(self):
         sc = self.deploy_scope
