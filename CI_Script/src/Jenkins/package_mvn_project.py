@@ -515,7 +515,7 @@ def package_run():
                 package.py 'E:\webpay_workspace_test' '0.4.1-SNAPSHOT' 'payment-ac-api' 
             when only generating dependencies dict use:
                 package.py '/root/Trunk' '0.4.0-SNAPSHOT'"""
-    if len(sys.argv) == 2:
+    if len(sys.argv) == 3:
         if os.path.isdir(sys.argv[1]) and re.search("\d{1,2}\.\d{1,2}\.\d{1,2}-SNAPSHOT",sys.argv[2],re.IGNORECASE):
             maven_project = sys.argv[1]
             target_version = sys.argv[2]
