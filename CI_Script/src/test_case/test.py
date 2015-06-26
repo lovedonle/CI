@@ -1,9 +1,19 @@
 # -*- coding: utf-8 -*-
 #import re
 #
-a = u"你       好！"
-b=a.replace(" ",'')
-print b
+import os,sys
+curPath = os.path.abspath(os.path.dirname(__file__))
+print curPath
+rootPath = os.path.split(curPath)[0]
+print rootPath
+sys.path.append(rootPath)
+print os.path.split(os.path.abspath(os.path.dirname(__file__)))[1]
+
+os.chdir("C://")
+print os.path.abspath(sys.argv[0])
+#a = u"你       好！"
+#b=a.replace(" ",'')
+#print b
 
 
 #file_hand = open(r"C:\text.txt")

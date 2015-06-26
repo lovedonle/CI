@@ -3,7 +3,10 @@
 #mail:dongjie789@sina.com
 #!/usr/bin/python
 import os,sys,re,subprocess,time,platform
-from Jenkins.package_dependency import dependencies
+curPath = os.path.abspath(os.path.dirname(__file__))
+rootPath = os.path.split(curPath)[0]
+sys.path.append(rootPath)
+from Jenkins import SysUtil
 class package_mvn_project(object):
     '''
     this class is use to analyze maven project, and package them one by one.
@@ -41,8 +44,8 @@ class package_mvn_project(object):
         self.dependencies = {}
         self.package_status = {}
         self.os_type = None
-        self.dependency_check_result = "mvn_dependency.log"
-        self.dependency_tree = "mvn_dependecy_tree.log"
+        self.dependency_check_result = "Jenkins/mvn_dependency.txt"
+        self.dependency_tree = "Jenkins/mvn_dependecy_tree.txt"
         self.sub_maven_project = []
         self.obsolete_project = [".svn","payment-redis","payment-cashier","zpos-server","sdk_demo"]
         self.mvn_timeout=20
@@ -128,6 +131,11 @@ class package_mvn_project(object):
         '''
         Save the dependencies to dict file
         '''
+#        package_folder = os.path.split(os.path.abspath(sys.argv[0]))[0]
+#        package_name = os.path.split(package_folder)[1]
+#        print os.path.join(self.maven_project,package_name)
+        os.chdir(os.path.join(self.maven_project,"Jenkins"))
+        print "Save the dependencies to %s under %s"%(self.dict_file,os.getcwd())
         if os.path.exists(self.dict_file):
             os.remove(self.dict_file)
         s_dict = open(self.dict_file,'a')
@@ -199,7 +207,7 @@ class package_mvn_project(object):
             if "<version>" + target_version + "</version>" in pom_content:
                 print "The version of %s is right."%pom_file
             else:
-                print "The version of %s is not equal to %s, try to fix the version info according to the given version."%(pom_file,target_version)
+                print "The version of %s is not %s, fix it."%(pom_file,target_version)
                 pom_content = re.sub("<version>\d{1,2}\.\d{1,2}\.\d{1,2}-SNAPSHOT</version>", "<version>"+target_version+"</version>", pom_content, 0, re.IGNORECASE)
 #                pom.seek(0)
 #                pom.write(pom_content)
@@ -467,7 +475,7 @@ class package_mvn_project(object):
                 process.terminate()#for windows,call Windows API TerminateProcess()
                 print "Polling end..."
                 break
-        log = open(self.maven_project+os.sep+"package.log","a")
+        log = open(self.maven_project+os.sep+"package.txt","a")
         try:
             log.write("==========" + key + " package log start==========/n")
             log.write(all_stdout)
@@ -521,7 +529,7 @@ def package_run():
             target_version = sys.argv[2]
             dict_file = r"dict.txt"
             read_dict = False
-            pack_proj = package_mvn_project(maven_project,target_version,dict_file=dict_file,read_dict=read_dict)        
+            pack_proj = package_mvn_project(maven_project,target_version,dict_file=dict_file,read_dict=read_dict)
             pack_proj.pre_mvn_project()
             if pack_proj.gen_depend_dict():
                 print "Length of dependencies is %s ."%str(len(pack_proj.dependencies))
