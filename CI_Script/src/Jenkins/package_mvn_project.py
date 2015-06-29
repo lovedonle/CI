@@ -3,6 +3,7 @@
 #mail:dongjie789@sina.com
 #!/usr/bin/python
 import os,sys,re,subprocess,time,platform
+from ConfigParser import ConfigParser
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
 sys.path.append(rootPath)
@@ -47,12 +48,13 @@ class package_mvn_project(object):
         self.dependency_check_result = "Jenkins/mvn_dependency.txt"
         self.dependency_tree = "Jenkins/mvn_dependecy_tree.txt"
         self.sub_maven_project = []
-        self.obsolete_project = [".svn","payment-redis","payment-cashier","zpos-server","sdk_demo"]
+        self.obsolete_project = [".svn"]
         self.mvn_timeout=20
         sys.setrecursionlimit(1000)
         self.os_types = self._enum(Windows = "windows",Linux = "linux", Mac = "mac")
         self._getostype()
         self._get_maven_env()
+        self._read_cfg()
 
     def pre_mvn_project(self):
         '''
@@ -190,6 +192,12 @@ class package_mvn_project(object):
         if maven_home == "":
             print "Maven environment is not configured correctly, please check."
             sys.exit(1)
+    def _read_cfg(self):
+        '''read configuration'''
+        config = ConfigParser()
+        config.readfp(open("Jenkins.ini"))
+        self.obsolete_project[len(self.obsolete_project):] = eval(config.get("package","exclude_project"))
+        print "obsolete project folder are %s"%self.obsolete_project
             
     def _check_pom_version(self,pom_file):
         '''
@@ -545,7 +553,7 @@ def package_run():
         if os.path.isdir(sys.argv[1]) and re.search("\d{1,2}\.\d{1,2}\.\d{1,2}-SNAPSHOT",sys.argv[2],re.IGNORECASE):
             maven_project = sys.argv[1]
             target_version = sys.argv[2]
-            package_scope = sys.argv[3] 
+            package_scope = sys.argv[3]
             dict_file = r"dict.txt"
             read_dict = True
             ignore_failure = False

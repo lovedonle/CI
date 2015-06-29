@@ -3,6 +3,7 @@
 #mail:dongjie789@sina.com
 #!/usr/bin/python
 import os,sys,shutil,stat
+from ConfigParser import ConfigParser
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
 sys.path.append(rootPath)
@@ -33,35 +34,39 @@ class deploy(object):
         self.force_backup = False
         self.backup = os.path.join(source_folder,'backup')
         SysUtil.createfolder(self.source_folder,'backup')        
-        self.web_items = {"boss":"payment-boss-web","merchant":"payment-merchant-web","pre":"payment-pre-interface"}
         self.web_item_dst_name = 'ROOT.war'
-        self.svc_items = {"ac":"payment-ac","account":"payment-account","ams":"payment-ams",
-                    "channel":"payment-channel","cm":"payment-cm","cms":"payment-cms",
-                    "fastdfs":"payment-fastdfs","mas":"payment-mas","pe":"payment-pe",
-                    "pss":"payment-pss","rcs":"payment-rcs","route":"payment-route",
-                    "security":"payment-security","settle":"payment-settle","tasks":"payment-tasks"}
+        self.__read_cfg()
         self.__gen_dirctory()
-
+        
+    def __read_cfg(self):
+        '''read configuration'''
+        config = ConfigParser()
+        config.readfp(open("Jenkins.ini"))
+        self.web_items = eval(config.get("deploy","web_items"))
+        self.svc_items = eval(config.get("deploy","svc_items"))
+        print self.web_items
+        print self.svc_items
+        
     def __gen_dirctory(self):
         '''
         define the head and tail name of the deploy path and run path.
         generate deploy and run directory of web and service
         '''
-        web_deploy = {"head":"/data/run/app/","tail":""}
-        svc_deploy = {"head":"/data/program/payment/","tail":"/deploy"}
-#        svc_deploy = {"head":"F:\\test\\deploy\\","tail":"/deploy"}
-        web_run = {"head":"/data/program/tomcat/","tail":"/node/bin"}
-        svc_run = {"head":"/data/program/payment/","tail":"/bin"}
-        web_cfg = {"head":"/data/program/tomcat/","tail":"/node/conf"}
-        svc_cfg = {"head":"/data/program/payment/","tail":"/conf"}
+        cfg_file = "Jenkins.ini"
+        web_deploy = SysUtil.read_cfg(cfg_file, "deploy", "web_deploy")
+        svc_deploy = SysUtil.read_cfg(cfg_file, "deploy", "svc_deploy")
+        web_run = SysUtil.read_cfg(cfg_file, "deploy", "web_run")
+        svc_run = SysUtil.read_cfg(cfg_file, "deploy", "svc_run")
+        web_cfg = SysUtil.read_cfg(cfg_file, "deploy", "web_cfg")
+        svc_cfg = SysUtil.read_cfg(cfg_file, "deploy", "svc_cfg")
         self.source_items = dict()
         self.backup_items = dict()
-        self.web_deploy_items=dict()
-        self.svc_deploy_items=dict()
-        self.web_run_items=dict()
-        self.svc_run_items=dict()
-        self.web_cfg_items=dict()
-        self.svc_cfg_items=dict()
+        self.web_deploy_items = dict()
+        self.svc_deploy_items = dict()
+        self.web_run_items = dict()
+        self.svc_run_items = dict()
+        self.web_cfg_items = dict()
+        self.svc_cfg_items = dict()
         for key in self.web_items.keys():
             self.source_items[key]=os.path.join(self.source_folder,self.web_items[key])
             self.backup_items[key]=os.path.join(self.backup,self.web_items[key])
@@ -123,7 +128,6 @@ class deploy(object):
             
     def __deploy_web(self,sub_sc):
         '''deploy web application'''
-        '''todo: delete the catch folder, such as:/data/program/tomcat/payment-boss-web/node/work/Catalina/localhost'''
         source_sub_folder = self.source_items[sub_sc]
         backup_sub_folder = self.backup_items[sub_sc] 
         web_deploy_folder = self.web_deploy_items[sub_sc]
@@ -217,10 +221,10 @@ def deploy_run():
     errmsg = """Format of arguments are not right, please check.
         usage:deploy.py source_folder,deploy_scope 
         example:
-            package all projects:
-                package.py '/root/Trunk' 'all' 
+            deploy all projects:
+                deploy.py '/root/Trunk' 'all' 
             package projects of payment-ac:
-                package.py '/root/Trunk' 'payment-ac'"""
+                deploy.py '/root/Trunk' 'payment-ac'"""
     if len(sys.argv) != 3:
         print errmsg
         sys.exit(1)
