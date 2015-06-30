@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 #author:Dong Jie
 #mail:dongjie789@sina.com
+#ver0.2
 #!/usr/bin/python
 import os,sys,shutil,stat
 from ConfigParser import ConfigParser

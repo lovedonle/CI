@@ -1,4 +1,5 @@
 #!/usr/bin/python
+#ver0.2
 import sys,os,shutil,time,stat
 
 #for offical using =========>

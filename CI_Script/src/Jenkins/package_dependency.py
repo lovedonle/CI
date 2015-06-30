@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/python
+#ver0.2
 import os,sys,re,subprocess,time,platform
 
 #Project foler

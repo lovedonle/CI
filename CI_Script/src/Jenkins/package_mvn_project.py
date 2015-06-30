@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 #author:Dong Jie
 #mail:dongjie789@sina.com
+#ver0.2
 #!/usr/bin/python
 import os,sys,re,subprocess,time,platform
 from ConfigParser import ConfigParser
@@ -9,13 +10,10 @@ rootPath = os.path.split(curPath)[0]
 sys.path.append(rootPath)
 from Jenkins import SysUtil
 class package_mvn_project(object):
-    '''
-    this class is use to analyze maven project, and package them one by one.
-    '''
+    '''this class is use to analyze maven project, and package them one by one'''
     def __init__(self,maven_project,target_version,scope='all',dict_file=None,
                  read_dict=False,ignore_failure=True):
-        '''
-        initialize the class parameters:
+        '''initialize the class parameters:
         maven_project: project folder, like "E:\webpay_workspace_test",
                 "/jenkins/jobs/Webpay_Trunk_Compile_Package_On_Linux/workspace".
         target_version: build version like "0.4.1-SNAPSHOT".
@@ -33,8 +31,7 @@ class package_mvn_project(object):
                         True: will generate dependency dictionary when some projects build failed. 
                         False: won't generate dependency dictionary when some projects build failed.
                 True: won't output and analyze dependency log; 
-                       will use this specified dictionary file to generate dependency dictionary                                                
-        '''
+                       will use this specified dictionary file to generate dependency dictionary'''
         self.maven_project = maven_project
         self.target_version = target_version
         self.scope=scope
@@ -57,9 +54,7 @@ class package_mvn_project(object):
         self._read_cfg()
 
     def pre_mvn_project(self):
-        '''
-        prepare maven projects and store them to sub_maven_project
-        '''
+        '''prepare maven projects and store them to sub_maven_project'''
         maven_project = self.maven_project
         sub_maven_project = []        
         for root, dirs, files in os.walk(maven_project):
@@ -99,9 +94,7 @@ class package_mvn_project(object):
         return gen_result     
 
     def package(self):
-        '''
-        Package according to the dependencies
-        '''
+        '''Package according to the dependencies'''
         print "==========Start to package needed maven projects=========="
         scope = self.scope
         self._package_start()
@@ -120,9 +113,7 @@ class package_mvn_project(object):
                     self._package_project(key)
 
     def remove_pom(self):
-        '''
-        remove pom.xml file, because they has been modified, when update the svn folder, it cause some error
-        '''
+        '''remove pom.xml file, because they has been modified, when update the svn folder, it cause some error'''
         for root, dirs, files in os.walk(self.maven_project):
             for f in files:
                 if "pom.xml" in f:
@@ -130,9 +121,7 @@ class package_mvn_project(object):
                     os.remove(os.path.join(root,f))
     
     def save_dict_file(self):
-        '''
-        Save the dependencies to dict file
-        '''
+        '''Save the dependencies to dict file'''
 #        package_folder = os.path.split(os.path.abspath(sys.argv[0]))[0]
 #        package_name = os.path.split(package_folder)[1]
 #        print os.path.join(self.maven_project,package_name)
@@ -160,9 +149,7 @@ class package_mvn_project(object):
         print "OS type is %s"%self.os_type
     
     def _get_maven_env(self):
-        '''
-        Get the maven install path and other information
-        '''
+        '''Get the maven install path and other information'''
         maven_home=''
         os_type = self.os_type
         os.popen("mvn -version>maven_info.txt")
@@ -200,9 +187,7 @@ class package_mvn_project(object):
         print "obsolete project folder are %s"%self.obsolete_project
             
     def _check_pom_version(self,pom_file):
-        '''
-        check the sub version of each project's pom file
-        '''
+        '''check the sub version of each project's pom file'''
         target_version = self.target_version
         post_pom_file = pom_file.replace(self.maven_project,'')
         #exclude the test folder contains the pom.xml file
@@ -240,9 +225,7 @@ class package_mvn_project(object):
                 pom.close()
  
     def _op_analyze_depend(self):
-        '''
-        use "mvn dependency:tree" to output dependencies of whole project and analyse them
-        '''
+        '''use "mvn dependency:tree" to output dependencies of whole project and analyse them'''
         maven_project = self.maven_project
         dependency_check_result = self.dependency_check_result
         print "==========Start to output the dependency=========="
@@ -304,9 +287,7 @@ class package_mvn_project(object):
             return True
     
     def _check_depend_succ(self):
-        '''
-        Check the all the dependency creating with out Error or FAILURE
-        '''
+        '''Check the all the dependency creating with out Error or FAILURE'''
         check_log = open(self.maven_project+os.sep+self.dependency_check_result,"r")
         success = True
         #todo: sometimes cannot read all content of the dependency log file
@@ -359,10 +340,7 @@ class package_mvn_project(object):
                     continue
  
     def _read_dict_file(self):
-        '''
-        To use this script, need prepare the dictionary file about the dependency tree, 
-        it will create dependencies dictionary
-        '''
+        '''To use this script, need prepare the dictionary file about the dependency tree,it will create dependencies dictionary'''
         read_status = True
         re_key_obj = ' |:'
         re_value_obj = '\[|\]'
@@ -393,10 +371,7 @@ class package_mvn_project(object):
         return read_status
     
     def _package_start(self):
-        '''
-        for some special maven projects like parent which 
-        maven goal type is 'pom' need package first
-        '''
+        '''for some special maven projects like parent which,maven goal type is 'pom' need package first'''
         project = ["payment-parent"]
         for sub_project in project:
             self._change_dir(sub_project)
@@ -405,9 +380,7 @@ class package_mvn_project(object):
             self._pollprocess(sub_project,p)
  
     def _package_project(self,key):
-        '''
-        package directed maven project using recurs
-        '''
+        '''package directed maven project using recurs'''
         dependencies = self.dependencies
         package_status = self.package_status
         maven_home = self.maven_home 
@@ -448,10 +421,8 @@ class package_mvn_project(object):
             print key,package_status[key]
 
     def _change_dir(self,project_name):
-        '''
-        Change the work folder according to the maven project, must be sure the folder is like "payment-pss-entity", 
-        "payment-pss-common-api", and the "payment-pss" is parent folder
-        '''
+        '''Change the work folder according to the maven project, must be sure the folder is like "payment-pss-entity", 
+        "payment-pss-common-api", and the "payment-pss" is parent folder'''
         if 1<=len(project_name.split("-")) <= 2:
             os.chdir(self.maven_project+os.sep+project_name)
         elif len(project_name.split("-")) >= 3:
@@ -460,11 +431,9 @@ class package_mvn_project(object):
             print "Please check the format of maven folder %s..."%project_name
 
     def _pollprocess(self, key, process):
-        '''
-        poll the process until timeout, then end the process, then check all the package all project success or not
+        '''poll the process until timeout, then end the process, then check all the package all project success or not
         key  the maven project
-        process  the subprocess.Popen() object
-        '''
+        process  the subprocess.Popen() object'''
         package_status = self.package_status
         temp_time = self.mvn_timeout
         stdout = process.communicate()[0]
