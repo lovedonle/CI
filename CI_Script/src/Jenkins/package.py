@@ -4,6 +4,7 @@
 #ver0.2
 #!/usr/bin/python
 import os,sys,re,subprocess,time,platform
+print os.path.abspath(".")
 from ConfigParser import ConfigParser
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
@@ -41,15 +42,14 @@ class package_mvn_project(object):
         self.maven_home = ""
         self.dependencies = {}
         self.package_status = {}
-        self.os_type = None
+        self.os_types = SysUtil.os_types()
+        self.os_type = SysUtil.getostype()
         self.dependency_check_result = "Jenkins/mvn_dependency.txt"
         self.dependency_tree = "Jenkins/mvn_dependecy_tree.txt"
         self.sub_maven_project = []
         self.obsolete_project = [".svn"]
         self.mvn_timeout=20
         sys.setrecursionlimit(1000)
-        self.os_types = self.__enum(Windows = "windows",Linux = "linux", Mac = "mac")
-        self.__getostype()
         self.__get_maven_env()
         self.__read_cfg()
 
@@ -133,20 +133,6 @@ class package_mvn_project(object):
         for key in self.dependencies.keys():
             s_dict.write("%s %s\n"%(key,str(self.dependencies[key])))
         s_dict.close()
-
-    def __enum(self,**enums):
-        return type('Enum',(),enums)
-
-    def __getostype(self):
-        os_string = platform.platform().lower()
-        if self.os_types.Windows in os_string:
-            self.os_type = self.os_types.Windows
-        elif self.os_types.Linux in os_string:
-            self.os_type = self.os_types.Linux
-        else:
-            print "Cannot get OS type, exit..."
-            sys.exit(1)
-        print "OS type is %s"%self.os_type
     
     def __get_maven_env(self):
         '''Get the maven install path and other information'''
@@ -166,9 +152,9 @@ class package_mvn_project(object):
                         else:
                             if not maven_home.endswith("bin"):
                                 maven_home = maven_home.split("bin")[0]+"bin"
-                        if "windows" in os_type:
+                        if self.os_types.Windows == os_type:
                             maven_home = maven_home + os.sep + "mvn.bat"
-                        elif "linux" in os_type:
+                        elif self.os_types.Linux ==  os_type:
                             maven_home = maven_home + os.sep + "mvn"
                         print "Maven home: %s"%maven_home
                         self.maven_home = maven_home                        
@@ -181,11 +167,10 @@ class package_mvn_project(object):
             sys.exit(1)
     def __read_cfg(self):
         '''read configuration'''
-        config = ConfigParser()
-        config.readfp(open("Jenkins.ini"))
-        self.obsolete_project[len(self.obsolete_project):] = eval(config.get("package","exclude_project"))
-        print "obsolete project folder are %s"%self.obsolete_project
-            
+        exclude_proj = SysUtil.read_cfg("Jenkins.ini", "package", "exclude_project")
+        self.obsolete_project[len(self.obsolete_project):] = exclude_proj
+        print "obsolete project folder are %s"%self.obsolete_project   
+        
     def __check_pom_version(self,pom_file):
         '''check the sub version of each project's pom file'''
         target_version = self.target_version
@@ -207,9 +192,9 @@ class package_mvn_project(object):
             #Why Linux is \r\n,windows is \n??????
             re_obj_run_on_windows = "<plugin>\n.*\n.*<artifactId>wagon-maven-plugin</artifactId>(\n.*){1,15}<url>scp.*</url>(\n.*){1,20}</plugin>"
             re_obj_run_on_linux = "<plugin>\r\n.*\r\n.*<artifactId>wagon-maven-plugin</artifactId>(\r\n.*){1,15}<url>scp.*</url>(\r\n.*){1,20}</plugin>"
-            if self.os_type == 'windows':
+            if self.os_type == self.os_types.Windows:
                 re_obj = re_obj_run_on_windows
-            elif self.os_type == 'linux':
+            elif self.os_type == self.os_types.Linux:
                 re_obj = re_obj_run_on_linux
             else:
                 print "The os is not windows or linux, please check."

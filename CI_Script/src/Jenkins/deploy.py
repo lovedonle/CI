@@ -158,7 +158,7 @@ class deploy(object):
                             os.remove(dst_web)
                         shutil.copy(src_web,dst_web)
                         print "Copy web package from %s to %s."%(src_web,dst_web)
-                    shutil.rmtree(self.web_run_items[key].split(os.sep)[-1]+r"work/Catalina/localhost")
+                    shutil.rmtree(self.web_run_items[sub_sc].split(os.sep)[-1]+r"work/Catalina/localhost")
                     print "Remove the cache file under run folder: node/work/Catalina/localhost"
                     self.__restart(self.web_items[sub_sc],self.web_run_items[sub_sc])
                 else:
