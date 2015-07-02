@@ -89,13 +89,13 @@ def prepare_maven_project():
                     #if contains pom.xml, then check its version
                     for level_1_element in level_1_files:
                         if "pom.xml".lower() in level_1_element.lower():
-                            _check_pom_version(maven_project+os.sep+sub_dir+os.sep+"pom.xml")
+                            __check_pom_version(maven_project+os.sep+sub_dir+os.sep+"pom.xml")
                 for sub_sub_dir in level_1_dirs:
                     for level_2_root, level_2_dirs, level_2_files in os.walk(maven_project+os.sep+sub_dir+os.sep+sub_sub_dir):
                         #if contains pom.xml, then check its version
                         for level_2_element in level_2_files:
                             if "pom.xml".lower() in level_2_element.lower():
-                                _check_pom_version(maven_project+os.sep+sub_dir+os.sep+sub_sub_dir+os.sep+"pom.xml")
+                                __check_pom_version(maven_project+os.sep+sub_dir+os.sep+sub_sub_dir+os.sep+"pom.xml")
                         break
                 break
         break
@@ -155,14 +155,14 @@ def output_analyse_dependency():
     if not ignore_check_dependency_log:
         if _check_dependency_success():
             print "All maven projects check dependency success, continue create the dependencies dictionary."
-            _create_dependencies(all_dependency)
+            __create_dependencies(all_dependency)
             return True
         else: 
             print "Some maven projects check dependency failed, exit..."
             return False
     else:
         print "Flag 'ignore_check_dependency_log' is set to True, so ignore checking dependency log."
-        _create_dependencies(all_dependency)
+        __create_dependencies(all_dependency)
         return True
 
 def read_dict_file():
@@ -205,20 +205,20 @@ def package(package_scope = None):
     '''
     print "======================Start to package all maven projects======================="
     #package parent
-    _package_start()
+    __package_start()
     #loop package
     global dependencies,package_status
     for key in dependencies.keys():
         package_status[key] = ""
     if package_scope is None:
         for key in package_status.keys():
-            _package_one_project(key)
+            __package_one_project(key)
     elif package_scope.count('-')>=2 or package_scope.count('-') == 0:
-        _package_one_project(package_scope.strip())
+        __package_one_project(package_scope.strip())
     elif package_scope.count('-')==1:
         for key in dependencies.keys():
             if package_scope+'-' in key:
-                _package_one_project(key)
+                __package_one_project(key)
         
 def remove_pom():
     '''
@@ -231,19 +231,19 @@ def remove_pom():
                 print "Now remove the modified pom.xml file %s ..."%str(os.path.join(root,f))
                 os.remove(os.path.join(root,f))
 
-def _package_start():
+def __package_start():
     '''
     for some special maven projects like parent which pakage type is pom, but need package first
     '''
     global package_status,maven_home
     project = ["payment-parent"]
     for sub_project in project:
-        _change_dir(sub_project)
+        __change_dir(sub_project)
         print "Current folder: %s, start package %s"%(os.path.abspath("."),sub_project)
         p = subprocess.Popen([maven_home,"clean","install"],stdout=subprocess.PIPE)
-        _pollprocess(sub_project,p)
+        __pollprocess(sub_project,p)
 
-def _package_one_project(key):
+def __package_one_project(key):
     '''
     package directed maven project using recurs
     '''
@@ -251,24 +251,24 @@ def _package_one_project(key):
     try:
         if package_status[key] == "":
             if len(dependencies[key]) == 0:
-                _change_dir(key)
+                __change_dir(key)
                 print "Current folder: %s, start package %s"%(os.path.abspath("."),key)
                 p = subprocess.Popen([maven_home,"clean","install","dependency:copy-dependencies","-DoutputDirectory=target/"],stdout=subprocess.PIPE)
-                _pollprocess(key,p)               
+                __pollprocess(key,p)               
             if len(dependencies[key]) >= 1:
                 depend_values = dependencies[key]
                 for depend_value in depend_values:
                     if package_status[depend_value] == "":
-                        _package_one_project(depend_value)
+                        __package_one_project(depend_value)
                 depengd_pakage_status = True
                 for depend_value in depend_values:
                     if package_status[depend_value] == "unpackaged":
                         depengd_pakage_status = False
                 if depengd_pakage_status:
-                    _change_dir(key)
+                    __change_dir(key)
                     print "Current folder: %s, start package %s"%(os.path.abspath("."),key)
                     p = subprocess.Popen([maven_home,"clean","install","dependency:copy-dependencies","-DoutputDirectory=target/"],stdout=subprocess.PIPE)
-                    _pollprocess(key,p)
+                    __pollprocess(key,p)
                 else:
                     package_status[key] = "unpackaged"
         else:
@@ -283,7 +283,7 @@ def _package_one_project(key):
         print "Exception occur:%s, please check."%error
         print key,package_status[key]
 
-def _pollprocess(key, process):
+def __pollprocess(key, process):
     '''
     poll the process until timeout, then end the process, then check all the package all project success or not
     key  the maven project
@@ -323,7 +323,7 @@ def _pollprocess(key, process):
     finally:
         log.close()
 
-def _check_pom_version(pom_file):
+def __check_pom_version(pom_file):
     '''
     check the sub version of each project's pom file
     '''
@@ -364,7 +364,7 @@ def _check_pom_version(pom_file):
         finally:
             pom.close()
     
-def _create_dependencies(all_dependency):
+def __create_dependencies(all_dependency):
     #Add 2 flags lines to mark the first line of file and last line of maven project
     current_project = []
     startline = "---start---"
@@ -402,7 +402,7 @@ def _create_dependencies(all_dependency):
                 continue
     print "======================Dependencies dictionary generate OK======================="
 
-def _check_dependency_success():
+def __check_dependency_success():
     '''
     Check the all the dependency creating with out Error or FAILURE
     '''
@@ -420,7 +420,7 @@ def _check_dependency_success():
         check_log.close()
         return success
 
-def _change_dir(project_name):
+def __change_dir(project_name):
     '''
     Change the work folder according to the maven project, must be sure the folder is like "payment-pss-entity", 
     "payment-pss-common-api", and the "payment-pss" is parent folder
