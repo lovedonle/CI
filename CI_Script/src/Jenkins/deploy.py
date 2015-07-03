@@ -4,7 +4,6 @@
 #ver0.2
 #!/usr/bin/python
 import os,sys,shutil,stat
-from ConfigParser import ConfigParser
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
 sys.path.append(rootPath)
@@ -36,17 +35,9 @@ class deploy(object):
         self.backup = os.path.join(source_folder,'backup')
         SysUtil.createfolder(self.source_folder,'backup')        
         self.web_item_dst_name = 'ROOT.war'
-        self.__read_cfg()
+        self.web_items = SysUtil.read_cfg("Jenkins.ini", "deploy", "web_items")
+        self.svc_items = SysUtil.read_cfg("Jenkins.ini", "deploy", "svc_items")
         self.__gen_dirctory()
-        
-    def __read_cfg(self):
-        '''read configuration'''
-        config = ConfigParser()
-        config.readfp(open("Jenkins.ini"))
-        self.web_items = eval(config.get("deploy","web_items"))
-        self.svc_items = eval(config.get("deploy","svc_items"))
-        print self.web_items
-        print self.svc_items
         
     def __gen_dirctory(self):
         '''

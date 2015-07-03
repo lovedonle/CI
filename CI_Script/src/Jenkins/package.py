@@ -3,9 +3,8 @@
 #mail:dongjie789@sina.com
 #ver0.2
 #!/usr/bin/python
-import os,sys,re,subprocess,time,platform
+import os,sys,re,subprocess,time
 print os.path.abspath(".")
-from ConfigParser import ConfigParser
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
 sys.path.append(rootPath)
@@ -56,7 +55,8 @@ class package_mvn_project(object):
     def pre_mvn_project(self):
         '''prepare maven projects and store them to sub_maven_project'''
         maven_project = self.maven_project
-        sub_maven_project = []        
+        sub_maven_project = []
+        pom_str = "pom.xml"        
         for root, dirs, files in os.walk(maven_project):
             print "==========Start to ignore obsolete folder=========="
             for obsolete in self.obsolete_project:
@@ -64,26 +64,26 @@ class package_mvn_project(object):
                     dirs.remove(obsolete)
                     print "There's no need to build %s, ignore it."%obsolete
             sub_maven_project = dirs[:]
-            print "==========Start to check the pom file and ignore the illegal folder=========="
-            for sub_dir in dirs:
-                for level_1_root, level_1_dirs, level_1_files in os.walk(maven_project+os.sep+sub_dir):
-                    if len(level_1_files) == 0:
-                        sub_maven_project.remove(sub_dir)
-                        print "There's no file under %s, ignore it."%sub_dir
-                    else:
-                        #if contains pom.xml, then check its version
-                        for level_1_element in level_1_files:
-                            if "pom.xml".lower() in level_1_element.lower():
-                                self.__check_pom_version(maven_project+os.sep+sub_dir+os.sep+"pom.xml")
-                    for sub_sub_dir in level_1_dirs:
-                        for level_2_root, level_2_dirs, level_2_files in os.walk(maven_project+os.sep+sub_dir+os.sep+sub_sub_dir):
-                            #if contains pom.xml, then check its version
-                            for level_2_element in level_2_files:
-                                if "pom.xml".lower() in level_2_element.lower():
-                                    self.__check_pom_version(maven_project+os.sep+sub_dir+os.sep+sub_sub_dir+os.sep+"pom.xml")
-                            break
-                    break
-            break
+#            print "==========Start to check the pom file and ignore the illegal folder=========="
+#            for sub_dir in dirs:
+#                for level_1_root, level_1_dirs, level_1_files in os.walk(os.path.join(maven_project, sub_dir)):
+#                    if len(level_1_files) == 0:
+#                        sub_maven_project.remove(sub_dir)
+#                        print "There's no file under %s, ignore it."%sub_dir
+#                    else:
+#                        #if contains pom.xml, then check its version
+#                        for level_1_element in level_1_files:
+#                            if pom_str.lower() in level_1_element.lower():
+#                                self.__check_pom_version(os.path.join(maven_project,sub_dir, pom_str))
+#                    for sub_sub_dir in level_1_dirs:
+#                        for level_2_root, level_2_dirs, level_2_files in os.walk(os.path.join(maven_project, sub_dir, sub_sub_dir)):
+#                            #if contains pom.xml, then check its version
+#                            for level_2_element in level_2_files:
+#                                if pom_str.lower() in level_2_element.lower():
+#                                    self.__check_pom_version(os.path.join(maven_project,sub_dir, sub_sub_dir, pom_str))
+#                            break
+#                    break
+#            break
         self.sub_maven_project = sub_maven_project
   
     def gen_depend_dict(self):
@@ -170,7 +170,9 @@ class package_mvn_project(object):
         exclude_proj = SysUtil.read_cfg("Jenkins.ini", "package", "exclude_project")
         self.obsolete_project[len(self.obsolete_project):] = exclude_proj
         print "obsolete project folder are %s"%self.obsolete_project   
-        
+    
+    def __check_pom(self,mvn_project):
+        pass
     def __check_pom_version(self,pom_file):
         '''check the sub version of each project's pom file'''
         target_version = self.target_version

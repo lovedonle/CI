@@ -4,14 +4,14 @@
 #!/usr/bin/python
 import re,os,platform,shutil
 from ConfigParser import ConfigParser
-__all__ = ["enum","getostype","read_cfg"]
+__all__ = ["enum","getostype","read_cfg","createfolder","copyfolder","os_types"]
 
 def enum(**enums):
     return type('Enum',(),enums)
-
 os_types = enum(Windows = "windows",Linux = "linux", Mac = "mac")
 
 def getostype():
+    os_types = enum(Windows = "windows",Linux = "linux", Mac = "mac")
     os_str = platform.platform().lower()
     if os_types.Windows in os_str:
         print "OS type is %s"%os_types.Windows
@@ -31,53 +31,49 @@ def read_cfg(ini_file,section,item):
     config.readfp(open(ini_file))
     return eval(config.get(section,item))
     
-def createfolder(path,folder):
-    '''TODO: consider user os.makedirs() to refactory'''
-    os_type = getostype()
+def createfolder(path,folder=""):
+    '''Create folder in specified absolute path, create if not exist'''
     os_types = enum(Windows = "windows",Linux = "linux", Mac = "mac")
-    if not os.path.exists(path):
-        print "Directory: %s not exist."%path
+    os_type = getostype()
+    directory = os.path.join(path,folder)
+    if os.path.exists(directory):
+        print "Directory: %s exists."%directory
     else:
-        folder = folder.strip(os.sep)
-        if path.endswith(os.sep):
-            folder_path = path + folder
-        else:
-            folder_path = path + os.sep + folder
-        
         if os_type == os_types.Windows:
-            if re.match("[c-g]:", folder_path, re.IGNORECASE):
-                print "create folder %s"%folder_path
-                if (not os.path.exists(folder_path)):
-                    os.mkdir(folder_path) 
+            if re.match("^[c-g]:", directory, re.IGNORECASE):
+                print "create folder %s"%directory
+                os.makedirs(directory)
             else:
-                print "folder path format is not correct:%s on %s system."%(folder_path,os_type)
+                print "folder path format is not correct:%s on %s system."%(directory,os_type)
         elif os_type == os_types.Linux:
-            if re.match("/", folder_path, re.IGNORECASE):
-                print "create folder %s"%folder_path
-                if (not os.path.exists(folder_path)):
-                    os.mkdir(folder_path)   
+            if re.match("/", directory, re.IGNORECASE):
+                print "create folder %s"%directory
+                os.makedirs(directory)
             else:
-                print "folder path format is not correct:%s on %s system."%(folder_path,os_type)
+                print "folder path format is not correct:%s on %s system."%(directory,os_type)
         elif os_type == os_types.Mac:
-            print 'create folder for mac system is TBD.'
+            print 'create folder for mac system is not done.'
             
 def copyfolder(src,dst):
     '''copy all files from src folder to dst folder, 
     if dst folder doesn't exist, create dst,
-    if dst folder exists, then will delete the old file under dst and copy new file from src to it.'''
+    if dst folder exists, then will delete the old file/folder which is the
+    same name with source, and copy new file/folder from src to it.'''
     if os.path.exists(src):
         if not os.path.exists(dst):
             shutil.copytree(src, dst)
             print "Copying from %s to %s done."%(src,dst)
-        for sub_file in os.listdir(src):
-            src_file = os.path.join(src,sub_file)
-            if os.path.isfile(src_file):#src is file
-                shutil.copy(src_file, dst)
-            if os.path.isdir(src_file):#src is folder
-                copyfolder(src_file,os.path.join(dst,sub_file))            
+        else:
+            for sub_file in os.listdir(src):
+                src_file = os.path.join(src,sub_file)
+                if os.path.isfile(src_file):#src is file
+                    shutil.copy(src_file, dst)
+                if os.path.isdir(src_file):#src is folder
+                    copyfolder(src_file,os.path.join(dst,sub_file))            
     else:
-        print "src folder %s doesn't exists"%src       
+        print "Source folder %s doesn't exist"%src       
 
 if "__main__" == __name__:
-    print os.path.abspath(".")
-    print read_cfg("Jenkins.ini", "package", "exclude_project")
+    #print read_cfg("Jenkins.ini", "package", "exclude_project")
+    createfolder(r"C:\\test\\dd\\d\\ad\\asd\\")
+    createfolder(r"C:\\test\\dd\\d\\ad\\asd\\asd\\asd\\asd\asd\asd\asd","BB")
