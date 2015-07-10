@@ -391,7 +391,6 @@ class package_mvn_project(object):
                 if len(dependencies[key]) == 0:
                     self.__change_dir(key)
                     print "Current folder: %s, start package %s"%(os.path.abspath("."),key)
-#                    p = subprocess.Popen([maven_home,"clean","install"],stdout=subprocess.PIPE)
                     p = subprocess.Popen([maven_home,"clean","install","dependency:copy-dependencies","-DoutputDirectory=target/"],stdout=subprocess.PIPE)
                     self.__pollprocess(key,p)               
                 if len(dependencies[key]) >= 1:
